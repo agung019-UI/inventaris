@@ -1,0 +1,56 @@
+/* ================================================================
+   SKELETON SHIMMER GLASSMORPHISM (CSS MURNI)
+   Harmonis dengan tema kaca transparan, tetap terlihat jelas & halus
+   ================================================================ */
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 150% 0;
+    }
+    100% {
+        background-position: -50% 0;
+    }
+}
+
+.skeleton-shimmer,
+.skeleton-box {
+    display: block;
+    max-width: 100%;
+    flex-shrink: 0;
+    background-color: rgba(226, 232, 240, 0.45);
+    background-image: linear-gradient(
+        90deg,
+        rgba(226, 232, 240, 0.35) 0%,
+        rgba(255, 255, 255, 0.75) 50%,
+        rgba(226, 232, 240, 0.35) 100%
+    );
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-shimmer,
+    .skeleton-box {
+        animation: none !important;
+        background-image: none !important;
+        background-color: rgba(226, 232, 240, 0.55) !important;
+    }
+}
+
+/* Screen reader only utility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}

@@ -1,0 +1,1175 @@
+/* ==================================================================
+   NEONAV GLASSMORPHISM GLOBAL STYLING SYSTEM
+   Inventaris Sekolah Budhi Warman II
+
+   Panel kaca terpadu, tombol koral pill, kontras teks tinggi (>= 4.5:1),
+   dan layout scroll terisolasi di semua halaman.
+   ================================================================== */
+
+:root {
+    /* --- WARNA DASAR GRADIENT NEONAV --- */
+    --neo-bg-start: #2b2f77;
+    --neo-bg-mid: #1f7a8c;
+    --neo-bg-end: #22c08a;
+    --neo-gradient: linear-gradient(135deg, #2b2f77 0%, #1f7a8c 55%, #22c08a 100%);
+
+    /* --- GLASS PANEL TOKENS --- */
+    --glass-bg: rgba(255, 255, 255, 0.18);
+    --glass-bg-subtle: rgba(255, 255, 255, 0.12);
+    --glass-bg-hover: rgba(255, 255, 255, 0.25);
+    --glass-bg-active: rgba(255, 255, 255, 0.28);
+    --glass-bg-strong: rgba(255, 255, 255, 0.90);
+    --glass-bg-modal: rgba(255, 255, 255, 0.95);
+
+    /* --- BORDER KACA --- */
+    --glass-border: rgba(255, 255, 255, 0.28);
+    --glass-border-subtle: rgba(255, 255, 255, 0.18);
+    --glass-border-strong: rgba(255, 255, 255, 0.45);
+
+    /* --- TINGKAT BLUR --- */
+    --glass-blur-sm: 6px;
+    --glass-blur: 14px;
+    --glass-blur-strong: 18px;
+
+    /* --- BAYANGAN LEMBUT --- */
+    --glass-shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.15);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    --glass-shadow-hover: 0 14px 40px rgba(0, 0, 0, 0.32);
+    --glass-shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.35);
+
+    /* --- AKSEN & TOMBOL KORAL --- */
+    --accent: #ff6b6b;
+    --accent-hover: #ff5252;
+    --accent-gradient: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+    --accent-hover-gradient: linear-gradient(135deg, #ff7b7b 0%, #ff3b3b 100%);
+    --accent-glow: 0 6px 18px rgba(255, 90, 90, 0.45);
+    --accent-glow-hover: 0 8px 24px rgba(255, 90, 90, 0.65);
+
+    /* --- STATUS AKTIF GRADIENT BIRU-TEAL --- */
+    --status-active-gradient: linear-gradient(135deg, #1f7a8c 0%, #22c08a 100%);
+    --status-active-glow: 0 4px 14px rgba(34, 192, 138, 0.45);
+
+    /* --- WARNA TEKS KONTRAS TINGGI (MINIMAL 4.5:1) --- */
+    --text-on-glass: #ffffff;
+    --text-on-light: #0f172a;
+    --text-muted-on-light: #334155;
+    --text-danger: #b91c1c;
+    --text-danger-light: #ff8a80;
+    --text-success: #15803d;
+    --text-warning: #854d0e;
+    --text-info: #075985;
+
+    /* --- RADIUS SUDUT --- */
+    --radius: 16px;
+    --radius-header: 20px;
+    --radius-card: 16px;
+    --radius-table: 20px;
+    --radius-modal: 20px;
+    --radius-pill: 100px;
+}
+
+@media screen {
+    /* ==============================================================
+       1. LATAR HALAMAN GLOBAL (DIAGONAL GRADIENT FIXED)
+       ============================================================== */
+    html,
+    body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        color: var(--text-on-glass);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: var(--neo-bg-start);
+        background-image: var(--neo-gradient);
+        background-attachment: fixed;
+        background-size: cover;
+    }
+
+    /* Container utama aplikasi Nuxt */
+    .app-layout {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    /* ==============================================================
+       KELAS BERSAMA (SHARED UTILITY CLASSES)
+       ============================================================== */
+    .glass {
+        background: var(--glass-bg) !important;
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        border: 1px solid var(--glass-border) !important;
+        border-radius: var(--radius-card);
+        box-shadow: var(--glass-shadow);
+        box-sizing: border-box;
+    }
+
+    .glass-strong {
+        background: var(--glass-bg-strong) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        border-radius: var(--radius-card);
+        box-shadow: var(--glass-shadow);
+        box-sizing: border-box;
+        color: var(--text-on-light) !important;
+    }
+
+    .glass-pill {
+        border-radius: var(--radius-pill) !important;
+        background: rgba(255, 255, 255, 0.20) !important;
+        backdrop-filter: blur(var(--glass-blur-sm));
+        -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+        border: 1px solid var(--glass-border) !important;
+        box-shadow: var(--glass-shadow-sm);
+        color: var(--text-on-glass) !important;
+    }
+
+    .glass-input {
+        background: rgba(255, 255, 255, 0.88) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        border-radius: var(--radius-pill) !important;
+        color: var(--text-on-light) !important;
+        font-weight: 500;
+        outline: none;
+        transition: all 200ms ease;
+    }
+
+    .glass-input:focus {
+        background: #ffffff !important;
+        border-color: #22c08a !important;
+        box-shadow: 0 0 0 3px rgba(34, 192, 138, 0.35) !important;
+    }
+
+    /* ==============================================================
+       2. SIDEBAR KACA (NAVBAR)
+       ============================================================== */
+    .sidebar-light {
+        width: 250px;
+        height: 100vh;
+        flex-shrink: 0;
+        overflow-y: auto;
+        position: relative;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        padding: 24px 16px;
+        background: var(--glass-bg-subtle) !important;
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        border-right: 1px solid var(--glass-border) !important;
+        box-shadow: var(--glass-shadow);
+        box-sizing: border-box;
+    }
+
+    .sidebar-light::-webkit-scrollbar {
+        width: 6px;
+    }
+    .sidebar-light::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+    }
+    .sidebar-light::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Teks Judul Sidebar */
+    .sidebar-light .app-title {
+        color: #ffffff !important;
+        font-size: 16px;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Link & Tombol Induk Sidebar */
+    .sidebar-light .nav-link,
+    .sidebar-light .parent-btn {
+        color: #ffffff !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        border-radius: var(--radius-pill);
+        border: 1px solid transparent;
+        transition: all 200ms ease;
+    }
+
+    .sidebar-light .nav-icon {
+        color: #ffffff !important;
+    }
+
+    .sidebar-light .chevron-icon {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    .sidebar-light .nav-link:hover,
+    .sidebar-light .parent-btn:hover {
+        background: var(--glass-bg-subtle) !important;
+        color: #ffffff !important;
+    }
+
+    .sidebar-light .active-link,
+    .sidebar-light .active-parent {
+        background: var(--glass-bg-active) !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Sub-menu Sidebar */
+    .sidebar-light .sub-link {
+        color: rgba(255, 255, 255, 0.90) !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        border-radius: var(--radius-pill);
+        border: 1px solid transparent;
+        transition: all 200ms ease;
+    }
+
+    .sidebar-light .sub-link:hover {
+        color: #ffffff !important;
+        background: var(--glass-bg-subtle) !important;
+    }
+
+    .sidebar-light .active-sub-link {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        background: var(--glass-bg-active) !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar-light .sub-dot {
+        background-color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .sidebar-light .active-sub-link .sub-dot {
+        background-color: #22c08a !important;
+        box-shadow: 0 0 10px rgba(34, 192, 138, 0.9) !important;
+        transform: scale(1.4);
+    }
+
+
+
+    /* ==============================================================
+       3. MAIN CONTENT CONTAINER & SCROLL AREA
+       ============================================================== */
+    .dashboard-container {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: transparent !important;
+        background-color: transparent !important;
+        --page-pad: 30px;
+    }
+
+    .page-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin: 0 calc(-1 * var(--page-pad)) calc(-1 * var(--page-pad));
+        padding: 0 var(--page-pad) var(--page-pad);
+    }
+
+    .page-body::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    .page-body::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+    }
+    .page-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    .page-body .table-wrapper,
+    .page-body .table-container {
+        max-height: calc(var(--page-body-h, 100vh) - var(--page-pad));
+        overflow: auto;
+    }
+
+    /* ==============================================================
+       4. PAGE HEADER KACA (STICKY, BLUR 14PX, TEKS PUTIH)
+       ============================================================== */
+    .dashboard-container > .header-container,
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 20px 28px;
+        background: var(--glass-bg) !important;
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        border-radius: var(--radius-header);
+        border: 1px solid var(--glass-border) !important;
+        margin-bottom: 24px;
+        box-shadow: var(--glass-shadow);
+        box-sizing: border-box;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        transition: all 250ms ease;
+    }
+
+    .header-container .header-text,
+    .header-container .header-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .header-container .page-title,
+    .header-container .section-title {
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 1.3;
+        margin: 0;
+        color: #ffffff !important;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+        word-break: break-word;
+    }
+
+    .header-container .subtitle,
+    .header-container .page-subtitle,
+    .header-container .section-desc {
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.90) !important;
+        margin: 4px 0 0 0;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        word-break: break-word;
+    }
+
+    .header-container .header-actions,
+    .header-container .action-buttons,
+    .header-container .header-action {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+    }
+
+    /* KOTAK "LEMBAGA:" DI PAGE HEADER (PILL / KOTAK KACA TERANG) */
+    .filter-group-header,
+    .header-container .filter-group-header {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        background: rgba(255, 255, 255, 0.20) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.30) !important;
+        border-radius: 14px !important;
+        padding: 6px 14px !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .filter-group-header label,
+    .header-container .filter-group-header label {
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+        white-space: nowrap !important;
+        margin: 0 !important;
+    }
+
+    .filter-group-header select,
+    .filter-group-header .select-box,
+    .filter-group-header .highlight-select,
+    .header-container .filter-group-header select {
+        background: rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(6px) !important;
+        -webkit-backdrop-filter: blur(6px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.40) !important;
+        border-radius: 10px !important;
+        color: #ffffff !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        padding: 5px 12px !important;
+        outline: none !important;
+        cursor: pointer !important;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .filter-group-header select option,
+    .header-container .filter-group-header select option {
+        background: #1e293b !important;
+        color: #ffffff !important;
+    }
+
+    /* ==============================================================
+       5. FILTER BAR (PENCARIAN, TREN, URUTKAN, TOGGLE)
+       ============================================================== */
+    .filter-bar {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 14px !important;
+        margin-bottom: 20px !important;
+        background: var(--glass-bg) !important;
+        backdrop-filter: blur(var(--glass-blur)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 16px !important;
+        padding: 14px 20px !important;
+        box-shadow: var(--glass-shadow) !important;
+    }
+
+    .filter-bar .filter-item {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    .filter-bar .filter-item label,
+    .filter-bar .toggle-item,
+    .filter-item label,
+    .toggle-item {
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+        user-select: none !important;
+        cursor: pointer !important;
+    }
+
+    .filter-bar .input-search,
+    .filter-bar .search-input,
+    .filter-bar .search-box,
+    .input-search {
+        flex: 1 !important;
+        min-width: 220px !important;
+        height: 40px !important;
+        padding: 0 16px !important;
+        background: rgba(255, 255, 255, 0.88) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        border-radius: var(--radius-pill) !important;
+        color: #0f172a !important;
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        outline: none !important;
+        transition: all 200ms ease !important;
+    }
+
+    .filter-bar .select-box,
+    .filter-bar select {
+        height: 40px !important;
+        padding: 0 16px !important;
+        background: rgba(255, 255, 255, 0.88) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        border-radius: var(--radius-pill) !important;
+        color: #0f172a !important;
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        outline: none !important;
+        cursor: pointer !important;
+        transition: all 200ms ease !important;
+    }
+
+    .filter-bar .input-search::placeholder,
+    .filter-bar .search-box::placeholder,
+    .input-search::placeholder {
+        color: #64748b !important;
+        font-weight: 400 !important;
+    }
+
+    .filter-bar .input-search:focus,
+    .filter-bar select:focus,
+    .input-search:focus {
+        background: #ffffff !important;
+        border-color: #22c08a !important;
+        box-shadow: 0 0 0 3px rgba(34, 192, 138, 0.35) !important;
+    }
+
+    /* ==============================================================
+       6. KARTU STATISTIK (HOVER NAIK 4PX, AKSEN BORDER 3-4PX)
+       ============================================================== */
+    .stat-card {
+        background: var(--glass-bg) !important;
+        backdrop-filter: blur(var(--glass-blur)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: var(--radius-card) !important;
+        box-shadow: var(--glass-shadow) !important;
+        min-height: 84px !important;
+        box-sizing: border-box !important;
+        padding: 16px 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease !important;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px) !important;
+        background: var(--glass-bg-hover) !important;
+        box-shadow: var(--glass-shadow-hover) !important;
+    }
+
+    /* Garis aksen kiri per jenis statistik */
+    .stat-card.red { border-left: 4px solid #ef4444 !important; }
+    .stat-card.green { border-left: 4px solid #10b981 !important; }
+    .stat-card.gray { border-left: 4px solid #94a3b8 !important; }
+    .stat-card.orange { border-left: 4px solid #f97316 !important; }
+    .stat-card.blue { border-left: 4px solid #3b82f6 !important; }
+    .stat-card.teal { border-left: 4px solid #14b8a6 !important; }
+    .stat-card.purple { border-left: 4px solid #8b5cf6 !important; }
+    .stat-card.cyan { border-left: 4px solid #06b6d4 !important; }
+
+    .stat-card .card-info {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .stat-card .card-title,
+    .card-info .card-title {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+        margin: 0 !important;
+    }
+
+    .stat-card .card-value,
+    .card-info .card-value {
+        font-size: 28px !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25) !important;
+        margin: 4px 0 2px 0 !important;
+        line-height: 1.1 !important;
+    }
+
+    .stat-card .unit,
+    .stat-card .card-sub {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: rgba(255, 255, 255, 0.90) !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    .stat-card .text-red {
+        color: #ff8a80 !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    /* KARTU STATISTIK TEKS GELAP (Rekapitulasi / pdf-container) */
+    .pdf-container .stat-card,
+    .stat-card.card-white {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
+    }
+    .pdf-container .stat-card .card-title,
+    .stat-card.card-white .card-title {
+        color: #475569 !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        text-shadow: none !important;
+    }
+    .pdf-container .stat-card .card-value,
+    .stat-card.card-white .card-value {
+        color: #0f172a !important;
+        font-size: 28px !important;
+        font-weight: 800 !important;
+        text-shadow: none !important;
+    }
+    .pdf-container .stat-card .unit,
+    .stat-card.card-white .unit {
+        color: #334155 !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        text-shadow: none !important;
+    }
+
+    /* Card umum */
+    .card,
+    .template-card,
+    .summary-card,
+    .source-card,
+    .settings-card,
+    .excel-info-card,
+    .dropzone-box,
+    .preview-header,
+    .grand-total-box,
+    .history-card {
+        background: var(--glass-bg) !important;
+        backdrop-filter: blur(var(--glass-blur)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: var(--radius-card) !important;
+        box-shadow: var(--glass-shadow) !important;
+        box-sizing: border-box;
+        color: #ffffff;
+        transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease, background 250ms ease;
+    }
+
+    .card:hover,
+    .template-card:hover,
+    .summary-card:hover,
+    .grand-total-box:hover {
+        transform: translateY(-4px);
+        background: var(--glass-bg-hover) !important;
+        border-color: var(--glass-border-strong) !important;
+        box-shadow: var(--glass-shadow-hover);
+    }
+
+    /* ==============================================================
+       7. PANEL TABEL (CONTAINER KACA, TABEL FROSTED PEKAT)
+       ============================================================== */
+    .table-section,
+    .table-container {
+        background: var(--glass-bg) !important;
+        backdrop-filter: blur(var(--glass-blur)) !important;
+        -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 20px !important;
+        padding: 22px !important;
+        box-shadow: var(--glass-shadow) !important;
+        margin-bottom: 24px !important;
+        box-sizing: border-box !important;
+    }
+
+    .table-section .table-info h3,
+    .table-info h3,
+    .section-title-badge {
+        color: #ffffff !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+        margin: 0 !important;
+    }
+
+    .table-section .table-controls label,
+    .table-controls label,
+    .filter-group label {
+        color: #ffffff !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    .badge-count {
+        background: rgba(255, 255, 255, 0.22) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        padding: 4px 12px !important;
+        border-radius: var(--radius-pill) !important;
+    }
+
+    /* Tabel Frosted Glass Pekat */
+    .table-wrapper {
+        background: var(--glass-bg-strong) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        border-radius: 14px !important;
+        overflow: auto !important;
+    }
+
+    /* HAPUS TEXT-SHADOW DI SEMUA SEL DAN ELEMEN TABEL */
+    .table-wrapper,
+    .table-wrapper *,
+    .data-table,
+    .data-table th,
+    .data-table td,
+    .data-table *,
+    .detail-table,
+    .detail-table th,
+    .detail-table td,
+    .detail-table * {
+        text-shadow: none !important;
+    }
+
+    .table-wrapper::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .table-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.5) !important;
+        border-radius: 10px;
+    }
+    .table-wrapper::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    .data-table {
+        background: transparent !important;
+        border-collapse: collapse;
+        width: 100%;
+        color: #0f172a !important;
+    }
+
+    .data-table th {
+        background: rgba(241, 245, 249, 0.95) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        font-size: 12.5px !important;
+        border-bottom: 2px solid rgba(203, 213, 225, 0.8) !important;
+        border-right: 1px solid rgba(226, 232, 240, 0.8) !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+    }
+
+    .data-table td {
+        background: transparent !important;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.7) !important;
+        border-right: 1px solid rgba(226, 232, 240, 0.5) !important;
+        color: #0f172a !important;
+        font-size: 13px !important;
+    }
+
+    /* Sel sekunder (kode barang, harga sebelumnya, keterangan) */
+    .data-table td.text-secondary,
+    .data-table td .code-text,
+    .code-badge {
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+
+    .data-table tbody tr {
+        transition: background-color 160ms ease;
+    }
+
+    .data-table tbody tr:hover td,
+    .data-table tbody tr:hover,
+    .clickable-row:hover td,
+    .clickable-row:hover {
+        background-color: rgba(224, 242, 254, 0.70) !important;
+    }
+
+    .data-table .row-selected,
+    .data-table .row-selected td {
+        background-color: rgba(191, 219, 254, 0.65) !important;
+    }
+
+    /* Selisih warna tabel */
+    .text-red {
+        color: #b91c1c !important;
+        font-weight: 700 !important;
+    }
+    .text-green {
+        color: #15803d !important;
+        font-weight: 700 !important;
+    }
+
+    /* Form card */
+    .form-card {
+        background: var(--glass-bg-strong) !important;
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        border-radius: var(--radius-card);
+        box-shadow: var(--glass-shadow);
+        box-sizing: border-box;
+        color: #0f172a;
+        padding: 24px;
+    }
+
+    .form-header h3 {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+    }
+
+    /* ==============================================================
+       8. TOMBOL (UTAMA KORAL, SEKUNDER KACA, STATUS BIRU-TEAL)
+       ============================================================== */
+    .btn-primary,
+    .btn-submit,
+    .header-container button.btn-submit,
+    .header-container .btn-primary {
+        height: 40px;
+        box-sizing: border-box;
+        padding: 0 22px;
+        font-size: 14px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        border-radius: var(--radius-pill) !important;
+        background: var(--accent-gradient) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        box-shadow: var(--accent-glow);
+        cursor: pointer;
+        transition: transform 250ms ease, box-shadow 250ms ease, background 250ms ease;
+    }
+
+    .btn-primary:hover:not(:disabled),
+    .btn-submit:hover:not(:disabled),
+    .header-container button.btn-submit:hover:not(:disabled) {
+        transform: translateY(-2px);
+        background: var(--accent-hover-gradient) !important;
+        box-shadow: var(--accent-glow-hover) !important;
+    }
+
+    .btn-secondary,
+    .btn-export,
+    .btn-outline,
+    .btn-page,
+    .btn-back,
+    .btn-select {
+        height: 40px;
+        box-sizing: border-box;
+        padding: 0 20px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        border-radius: var(--radius-pill) !important;
+        background: rgba(255, 255, 255, 0.20) !important;
+        backdrop-filter: blur(var(--glass-blur-sm));
+        -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+        color: #ffffff !important;
+        border: 1px solid var(--glass-border) !important;
+        box-shadow: var(--glass-shadow-sm);
+        cursor: pointer;
+        transition: all 250ms ease;
+    }
+
+    .btn-secondary:hover:not(:disabled),
+    .btn-export:hover:not(:disabled),
+    .btn-outline:hover:not(:disabled),
+    .btn-page:hover:not(:disabled),
+    .btn-back:hover,
+    .btn-select:hover:not(:disabled) {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.32) !important;
+        border-color: var(--glass-border-strong) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    }
+
+    /* OVERRIDE KHUSUS: TOMBOL CETAK PDF / EXPORT
+       Warna koral tetap, hapus semua shadow / glow kemerahan pada normal, hover, focus, dan active */
+    .btn-export,
+    .btn-export:hover,
+    .header-container .btn-export,
+    .header-container button.btn-export {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        border-radius: 100px !important;
+        box-shadow: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+    }
+
+    .btn-export:hover:not(:disabled),
+    .header-container .btn-export:hover:not(:disabled),
+    .header-container button.btn-export:hover:not(:disabled) {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #ff7b7b 0%, #ff3b3b 100%) !important;
+        box-shadow: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+    }
+
+    .btn-export:focus,
+    .btn-export:focus-visible,
+    .btn-export:active,
+    .header-container .btn-export,
+    .header-container button.btn-export,
+    .header-container .btn-export:hover,
+    .header-container button.btn-export:hover,
+    .header-container .btn-export:focus,
+    .header-container button.btn-export:focus {
+        box-shadow: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+        outline: none;
+    }
+
+    .btn-export:disabled,
+    .header-container .btn-export:disabled,
+    .header-container button.btn-export:disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+    }
+
+    .btn-page.active,
+    .current-page {
+        background: var(--status-active-gradient) !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        border-color: rgba(255, 255, 255, 0.45) !important;
+        box-shadow: var(--status-active-glow) !important;
+    }
+
+    .btn-page:disabled {
+        opacity: 0.45 !important;
+        cursor: not-allowed !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+    }
+
+    .pagination-info {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Status Aktif ("Digunakan Saat Ini" / Selected State) */
+    .btn-selected,
+    .btn-select.btn-selected,
+    .status-active-btn {
+        background: var(--status-active-gradient) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        box-shadow: var(--status-active-glow) !important;
+    }
+
+    .btn-selected:hover,
+    .btn-select.btn-selected:hover {
+        background: linear-gradient(135deg, #2596ab 0%, #29d79c 100%) !important;
+        box-shadow: 0 6px 20px rgba(34, 192, 138, 0.6) !important;
+    }
+
+    /* Tombol Aksi Tabel (Edit/Hapus/Simpan/Batal) */
+    .data-table .btn-icon,
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: var(--radius-pill);
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border: 1px solid rgba(226, 232, 240, 0.8) !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        transition: all 180ms ease;
+        font-size: 14px;
+    }
+
+    .btn-icon:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-icon.edit-btn { color: #2563eb !important; }
+    .btn-icon.edit-btn:hover { background: #2563eb !important; color: #ffffff !important; }
+    .btn-icon.delete-btn { color: #ef4444 !important; }
+    .btn-icon.delete-btn:hover { background: #ef4444 !important; color: #ffffff !important; }
+    .btn-icon.save-btn { color: #10b981 !important; }
+    .btn-icon.save-btn:hover { background: #10b981 !important; color: #ffffff !important; }
+    .btn-icon.cancel-btn { color: #64748b !important; }
+    .btn-icon.cancel-btn:hover { background: #64748b !important; color: #ffffff !important; }
+
+    /* ==============================================================
+       9. BADGE & CHIP (KONTRAS TINGGI >= 4.5:1)
+       ============================================================== */
+    .trend-badge,
+    .status-badge,
+    .badge {
+        display: inline-block !important;
+        padding: 3px 10px !important;
+        border-radius: var(--radius-pill) !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+        letter-spacing: 0.3px !important;
+        border: 1px solid transparent !important;
+        white-space: nowrap !important;
+    }
+
+    /* Naik / Lelang / Musnahkan: Latar #fee2e2, Teks #991b1b (Kontras 7.8:1) */
+    .trend-naik,
+    .status-badge.lelangmusnahkan,
+    .status-badge.lelang_musnah,
+    .badge-red {
+        background-color: #fee2e2 !important;
+        color: #991b1b !important;
+        border-color: #fecaca !important;
+    }
+
+    /* Turun / Aktif: Latar #dcfce7, Teks #166534 (Kontras 6.9:1) */
+    .trend-turun,
+    .status-badge.aktif,
+    .badge-green {
+        background-color: #dcfce7 !important;
+        color: #166534 !important;
+        border-color: #bbf7d0 !important;
+    }
+
+    /* Tetap / Netral: Latar #f1f5f9, Teks #334155 (Kontras 8.5:1) */
+    .trend-tetap,
+    .badge-gray {
+        background-color: #f1f5f9 !important;
+        color: #334155 !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    /* Baru / Terupgrade: Latar #e0f2fe, Teks #075985 (Kontras 6.6:1) */
+    .trend-baru,
+    .status-badge.terupgrade,
+    .badge-blue {
+        background-color: #e0f2fe !important;
+        color: #075985 !important;
+        border-color: #bae6fd !important;
+    }
+
+    /* Mutasi: Latar #fef3c7, Teks #854d0e (Kontras 6.5:1) */
+    .status-badge.dimutasi,
+    .status-badge.mutasi,
+    .badge-yellow {
+        background-color: #fef3c7 !important;
+        color: #854d0e !important;
+        border-color: #fde68a !important;
+    }
+
+    /* Dihibahkan: Latar #ede9fe, Teks #5b21b6 (Kontras 7.2:1) */
+    .status-badge.dihibahkan,
+    .status-badge.hibah,
+    .badge-purple {
+        background-color: #ede9fe !important;
+        color: #5b21b6 !important;
+        border-color: #ddd6fe !important;
+    }
+
+    /* ==============================================================
+       10. MODAL & TOAST KACA
+       ============================================================== */
+    .modal-overlay {
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(10, 15, 30, 0.60) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .modal-content,
+    .modal-box {
+        background: var(--glass-bg-modal) !important;
+        backdrop-filter: blur(var(--glass-blur-strong));
+        -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+        border: 1px solid rgba(255, 255, 255, 0.8) !important;
+        border-radius: var(--radius-modal) !important;
+        box-shadow: var(--glass-shadow-modal) !important;
+        overflow: hidden;
+        color: #0f172a !important;
+    }
+
+    .Toastify__toast,
+    .vue3-toastify {
+        background: rgba(255, 255, 255, 0.90) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+        color: #0f172a !important;
+        font-weight: 600;
+    }
+
+    .Toastify__toast--success { border-left: 5px solid #22c08a !important; }
+    .Toastify__toast--error { border-left: 5px solid #ff5252 !important; }
+
+    /* ==============================================================
+       11. RESPONSIVE (< 768px)
+       ============================================================== */
+    @media (max-width: 768px) {
+        .header-container {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 18px 20px;
+        }
+
+        .header-container .header-text,
+        .header-container .header-content {
+            width: 100%;
+        }
+
+        .header-container .header-actions,
+        .header-container .action-buttons,
+        .header-container .header-action {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+
+        .header-container .header-actions > *,
+        .header-container button,
+        .header-container .btn,
+        .header-container .search-container,
+        .header-container .filter-group-header,
+        .header-container input.search-box,
+        .header-container select.select-box {
+            width: 100%;
+        }
+    }
+
+    /* ==============================================================
+       12. FALLBACK UNTUK BROWSER TANPA BACKDROP-FILTER
+       ============================================================== */
+    @supports not (backdrop-filter: blur(1px)) {
+        .sidebar-light,
+        .header-container,
+        .card,
+        .stat-card,
+        .template-card,
+        .summary-card,
+        .filter-bar {
+            background: rgba(30, 40, 90, 0.92) !important;
+        }
+        .table-section,
+        .table-container,
+        .table-wrapper {
+            background: rgba(255, 255, 255, 0.96) !important;
+        }
+        .modal-overlay {
+            background: rgba(10, 15, 30, 0.85) !important;
+        }
+    }
+}
+
+/* ==============================================================
+   13. PRINT / PDF EXPORT RULES
+   ============================================================== */
+@media print {
+    body {
+        background: #ffffff !important;
+        background-image: none !important;
+        color: #000000 !important;
+    }
+}

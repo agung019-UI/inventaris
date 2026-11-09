@@ -2,35 +2,20 @@
 import { ref, onMounted, computed } from 'vue'
 import { toast } from 'vue3-toastify'
 import Navbar from '~/components/Navbar.vue'
+import SkeletonBox from '~/components/SkeletonBox.vue'
+import { useSkeletonDelay } from '~/composables/useSkeletonDelay'
+import { parsePrice } from '~/utils/price'
 
 // --- PASTIKAN URL INI SAMA DENGAN URL DEPLOY TERBARU ANDA ---
 const GOOGLE_SCRIPT_URL = "http://127.0.0.1:8000/api/inventaris"
 
 const isLoading = ref(true)
+const showSkeleton = useSkeletonDelay(isLoading, 150)
 
 // State penampung data dari masing-masing lembaga
 const dataSMA = ref<any[]>([])
 const dataSMK = ref<any[]>([])
 const dataYAYASAN = ref<any[]>([])
-
-// ================================================================
-// PERBAIKAN LOGIKA 1: PARSING HARGA (KEBAL DESIMAL & STRICT TYPESCRIPT)
-// ================================================================
-const parsePrice = (priceStr: any): number => {
-    if (!priceStr) return 0;
-    let str: string = String(priceStr).trim();
-    
-    // Potong angka di belakang koma (tambahkan || '' untuk mengatasi error TS undefined)
-    if (str.includes(',')) {
-        str = str.split(',')[0] || '';
-    } else if (str.includes('.00')) {
-        str = str.split('.00')[0] || '';
-    }
-    
-    // Hilangkan semua karakter kecuali angka murni
-    const cleanStr = str.replace(/[^0-9]/g, '');
-    return parseInt(cleanStr, 10) || 0;
-}
 
 const formatRupiah = (angka: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
@@ -133,16 +118,58 @@ const grandTotalAset = computed(() => statsSMA.value.totalAset + statsSMK.value.
         <Navbar />
 
         <main class="dashboard-container">
-            <div class="header-container">
-                <h1 class="page-title text-center" style="width: 100%; text-transform: uppercase; letter-spacing: 1px;">Total Aset Budhi Warman II</h1>
-            </div>
+            <PageHeader
+                title="Total Aset Budhi Warman II"
+                subtitle="Akumulasi estimasi nilai aset dan rekapitulasi total SMA, SMK, dan Yayasan."
+            />
 
-            <div v-if="isLoading" class="loading-state">
-                <div class="spinner"></div>
-                <h2>Mengkalkulasi Nilai Aset SMA, SMK, dan Yayasan...</h2>
-            </div>
+            <!-- AREA ISI: satu-satunya bagian yang scroll -->
+            <div class="page-body">
 
-            <div v-else class="content-wrapper">
+            <div :aria-busy="isLoading ? 'true' : 'false'">
+                <span v-if="isLoading" class="sr-only">Mengkalkulasi Nilai Aset SMA, SMK, dan Yayasan...</span>
+
+                <!-- SKELETON TOTAL ASET -->
+                <div v-if="isLoading && showSkeleton" class="content-wrapper" aria-hidden="true">
+                    <div class="summary-grid-3">
+                        <div v-for="i in 3" :key="i" class="summary-card">
+                            <div class="card-header" style="background-color: #f1f5f9; display: flex; justify-content: center;">
+                                <SkeletonBox width="100px" height="16px" radius="4px" />
+                            </div>
+                            <table class="summary-table">
+                                <tbody>
+                                    <tr v-for="r in 5" :key="r" :class="{ 'bg-cyan': r === 4, 'bg-yellow': r === 5 }">
+                                        <td style="padding: 10px 15px;"><SkeletonBox :width="(45 + (r * 7)) + '%'" height="14px" radius="4px" /></td>
+                                        <td class="text-right" style="padding: 10px 15px;"><SkeletonBox width="110px" height="14px" radius="4px" style="margin-left: auto;" /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="grand-total-section">
+                        <div class="grand-total-box">
+                            <div class="gt-header bg-yellow">
+                                <h3>TOTAL ASET REAL TIME (NETTO)</h3>
+                            </div>
+                            <div class="gt-body" style="display: flex; justify-content: center; padding: 25px 20px;">
+                                <SkeletonBox width="260px" height="34px" radius="6px" />
+                            </div>
+                        </div>
+
+                        <div class="grand-total-box mt-4">
+                            <div class="gt-header bg-cyan">
+                                <h3>TOTAL ASET AWAL (BRUTO)</h3>
+                            </div>
+                            <div class="gt-body" style="display: flex; justify-content: center; padding: 25px 20px;">
+                                <SkeletonBox width="260px" height="34px" radius="6px" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KONTEN ASLI KETIKA TIDAK LOADING -->
+                <div v-else-if="!isLoading" class="content-wrapper">
                 
                 <!-- GRID 3 KOLOM UNTUK SMA, SMK, YAYASAN -->
                 <div class="summary-grid-3">
@@ -261,23 +288,24 @@ const grandTotalAset = computed(() => statsSMA.value.totalAset + statsSMK.value.
                 </div>
 
             </div>
+            </div>
+            </div>
         </main>
     </div>
 </template>
 
 <style scoped>
 .app-layout { display: flex; min-height: 100vh; background-color: #f1f5f9; }
-.dashboard-container { flex: 1; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: calc(100% - 250px); overflow-x: hidden; }
+.dashboard-container { flex: 1; padding: 40px; --page-pad: 40px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: calc(100% - 250px); overflow-x: hidden; }
 
-.header-container { margin-bottom: 40px; }
-.page-title { font-size: 28px; font-weight: 900; color: #1e293b; margin: 0; text-align: center; }
+
 
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .mt-4 { margin-top: 30px; }
 
-.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 50vh; color: #64748b; font-weight: 600; }
-.spinner { border: 5px solid #e2e8f0; border-top: 5px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+
+
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 /* GRID 3 KOLOM */

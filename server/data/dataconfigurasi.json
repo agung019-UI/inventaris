@@ -1,0 +1,38 @@
+{
+  "googleScriptUrl": "http://127.0.0.1:8000/api/inventaris",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/16PK5bggQ6gl5XoGpggCNGaMEdbg7-wJehDW3Jjxy1MM/edit?usp=sharing",
+  "spreadsheetId": "16PK5bggQ6gl5XoGpggCNGaMEdbg7-wJehDW3Jjxy1MM",
+  "lembagaDefault": "SMA",
+  "daftarLembaga": [
+    {
+      "kode": "SMA",
+      "nama": "SMA Budhi Warman II",
+      "singkatan": "SMA BW 2"
+    },
+    {
+      "kode": "SMK",
+      "nama": "SMK Budhi Warman II",
+      "singkatan": "SMK BW 2"
+    },
+    {
+      "kode": "YAYASAN",
+      "nama": "Yayasan Budhi Warman II",
+      "singkatan": "Yayasan"
+    }
+  ],
+  "aplikasi": {
+    "nama": "Sistem Informasi Inventaris Barang",
+    "instansi": "Sekolah Budhi Warman II",
+    "alamat": "Jl. Raya Bogor Km. 28, Pekayon, Pasar Rebo, Jakarta Timur",
+    "telepon": "(021) 8710387",
+    "email": "info@budhiwarman2.sch.id",
+    "tahunAjaran": "2024/2025"
+  },
+  "laporan": {
+    "kota": "Jakarta",
+    "penanggungJawab": "Kepala Sekolah",
+    "namaPenanggungJawab": "Drs. H. Pimpinan, M.Pd",
+    "nipPenanggungJawab": "-"
+  },
+  "updatedAt": "2026-11-09T03:22:00.000Z"
+}

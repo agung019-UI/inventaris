@@ -2,6 +2,9 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { toast } from 'vue3-toastify'
 import Navbar from '~/components/Navbar.vue'
+import SkeletonCards from '~/components/SkeletonCards.vue'
+import SkeletonTable from '~/components/SkeletonTable.vue'
+import { useSkeletonDelay } from '~/composables/useSkeletonDelay'
 
 // --- GANTI URL INI DENGAN URL DEPLOY ANDA YANG PALING BARU! ---
 const GOOGLE_SCRIPT_URL = "http://127.0.0.1:8000/api/inventaris"
@@ -9,6 +12,13 @@ const GOOGLE_SCRIPT_URL = "http://127.0.0.1:8000/api/inventaris"
 const dataInventaris = ref<any[]>([])
 const dataMasterBarang = ref<any[]>([])
 const isLoading = ref(true)
+const showSkeleton = useSkeletonDelay(isLoading, 150)
+const TABLE_HEADERS = [
+    'No', 'Tgl Pembukuan', 'Gol', 'Kel', 'JB-K', 'No Urut Brg',
+    'Nama Barang', 'Ket Merk/Ukuran', 'Qty', 'Satuan', 'Tahun',
+    'Asal', 'Tgl Perolehan', 'Kondisi', 'Harga', 'Ruang',
+    'Status', 'Tempat', 'Pembelian', 'Action'
+]
 const isSubmitting = ref(false)
 
 const showModal = ref(false)
@@ -248,12 +258,23 @@ const validInventaris = computed(() => {
         const namaBarang = String(item.namaBarang || item.nama_barang || '').trim()
         const upperNama = namaBarang.toUpperCase()
         
+        // Hanya buang baris HEADER besar "BUKU INDUK", sisanya lolos
         if (upperNama.includes('BUKU INDUK') || upperNama.includes('JAKARTA') || upperNama === 'NAMA BARANG / BENDA') return false
-        if (upperNama.includes('TANAH DAN BANGUNAN') || upperNama === 'TANAH' || upperNama === 'BANGUNAN') return false
+        
+        // PERBAIKAN: HAPUS PEMBLOKIRAN UNTUK TANAH DAN BANGUNAN AGAR MEREKA BISA MASUK
+        // if (upperNama.includes('TANAH DAN BANGUNAN') || upperNama === 'TANAH' || upperNama === 'BANGUNAN') return false
+        
         if (namaBarang === "" || namaBarang === "-") return false
         
         const noUrutBrg = String(item.noUrutBarang || item.no_urut_barang || item.no_urut || item.noUrut || item.jb_k || '').trim()
-        if (noUrutBrg === '' || noUrutBrg === '-' || noUrutBrg === '0000' || noUrutBrg === '000' || noUrutBrg === '00' || noUrutBrg === '0') return false
+        const kuantitas = String(item.kuantitas || item.Kuantitas || '').trim()
+        const ketMerk = String(item.ket_merk_ukuran || item['Ket Merk, Nomor , Ukuran'] || '').trim()
+
+        // Buang baris jika no urut kosong ATAU jika dia adalah judul kategori murni (0000 tanpa kuantitas dan tanpa keterangan)
+        const isNoUrutKosong = noUrutBrg === '' || noUrutBrg === '-' 
+        const isHeaderKategori = (noUrutBrg === '0000' || noUrutBrg === '000' || noUrutBrg === '00' || noUrutBrg === '0') && (kuantitas === '' || kuantitas === '0') && ketMerk === ''
+        
+        if (isNoUrutKosong || isHeaderKategori) return false
         
         return true
     }).map(item => {
@@ -299,7 +320,7 @@ const uniqueNamaBarangList = computed(() => {
             const upper = name.toUpperCase()
             if (name === "" || name === "-") return false
             if (upper.includes('BUKU INDUK') || upper.includes('JAKARTA') || upper.includes('NAMA BARANG')) return false
-            if (upper.includes('TANAH DAN BANGUNAN') || upper === 'TANAH' || upper === 'BANGUNAN') return false
+            // PERBAIKAN: Hapus Pemblokiran Tanah Bangunan
             return true
         }).sort((a, b) => a.localeCompare(b))
     }
@@ -420,10 +441,15 @@ onMounted(() => { fetchBukuIndukData() })
         <Navbar />
 
         <main class="dashboard-container">
-            <div class="header-container">
-                <h1 class="page-title">Buku Induk Inventaris</h1>
+            <PageHeader
+                title="Buku Induk Inventaris"
+                subtitle="Pencatatan dan pengelolaan seluruh data aset barang inventaris sekolah."
+            >
                 <button @click="showModal = true" class="btn-submit">+ Tambah Data</button>
-            </div>
+            </PageHeader>
+
+            <!-- AREA ISI: satu-satunya bagian yang scroll -->
+            <div class="page-body">
 
             <!-- MODAL FORM -->
             <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
@@ -517,7 +543,7 @@ onMounted(() => { fetchBukuIndukData() })
                         </div> 
 
                         <div class="form-actions mt-4">
-                            <button type="submit" class="btn-submit" :disabled="isSubmitting" style="width: 100%; padding: 14px; font-size: 16px;">
+                            <button type="submit" class="btn-submit" :disabled="isSubmitting || isLoading" style="width: 100%; padding: 14px; font-size: 16px;">
                                 <span v-if="isSubmitting">Memvalidasi & Menyimpan Data...</span>
                                 <span v-else>+ Simpan Data Inventaris</span>
                             </button>
@@ -526,11 +552,12 @@ onMounted(() => { fetchBukuIndukData() })
                 </div>
             </div>
 
-            <div v-if="isLoading" class="loading-state">Memuat data {{ selectedLembaga }}...</div>
+            <div :aria-busy="isLoading ? 'true' : 'false'">
+                <span v-if="isLoading" class="sr-only">Memuat data {{ selectedLembaga }}...</span>
 
-            <div v-else>
-                <!-- STATISTIK -->
-                <div class="stats-grid">
+                <!-- STATISTIK SKELETON / NYATA -->
+                <SkeletonCards v-if="isLoading && showSkeleton" :count="6" grid-class="stats-grid" :card-height="78" />
+                <div v-else-if="!isLoading" class="stats-grid">
                     <div class="stat-card blue" :class="{ active: selectedFilter === 'all' }" @click="selectedFilter = 'all'">
                         <div class="card-info"><span class="card-title">TOTAL INVENTARIS</span><h2 class="card-value">{{ totalInventaris }}</h2></div>
                     </div>
@@ -555,14 +582,14 @@ onMounted(() => { fetchBukuIndukData() })
                     <div class="table-controls" style="flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between;">
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <div class="filter-group">
-                                <label for="pilihLembaga" style="color: #0f172a;">Lembaga:</label>
-                                <select id="pilihLembaga" v-model="selectedLembaga" class="select-box" style="min-width: 120px; font-weight: 600;">
+                                <label for="pilihLembaga">Lembaga:</label>
+                                <select id="pilihLembaga" v-model="selectedLembaga" class="select-box" style="min-width: 120px; font-weight: 600;" :disabled="isLoading">
                                     <option value="SMA">SMA</option><option value="SMK">SMK</option><option value="YAYASAN">YAYASAN</option>
                                 </select>
                             </div>
                             <div class="filter-group">
                                 <label for="filterStatus">Status:</label>
-                                <select id="filterStatus" v-model="selectedFilter" class="select-box" style="min-width: 150px;">
+                                <select id="filterStatus" v-model="selectedFilter" class="select-box" style="min-width: 150px;" :disabled="isLoading">
                                     <option value="all">Semua Status</option>
                                     <option value="masih_ada">Aktif / Masih Ada</option>
                                     <option value="mutasi">Dimutasi</option>
@@ -573,7 +600,7 @@ onMounted(() => { fetchBukuIndukData() })
                             </div>
                             <div class="filter-group">
                                 <label for="filterBarang">Pilih Barang:</label>
-                                <select id="filterBarang" v-model="selectedNamaBarang" class="select-box">
+                                <select id="filterBarang" v-model="selectedNamaBarang" class="select-box" :disabled="isLoading">
                                     <option value="all">Semua Barang</option>
                                     <option v-for="(nama, idx) in uniqueNamaBarangList" :key="idx" :value="nama">{{ nama }}</option>
                                 </select>
@@ -581,11 +608,17 @@ onMounted(() => { fetchBukuIndukData() })
                         </div>
                         <div class="table-info" style="margin-top: 15px; width: 100%;">
                             <h3>Daftar Inventaris <span class="text-capitalize">{{ selectedLembaga }}</span></h3>
-                            <span class="badge-count">Menampilkan {{ filteredInventaris.length }} data</span>
+                            <span class="badge-count">Menampilkan {{ isLoading ? "..." : filteredInventaris.length }} data</span>
                         </div>
                     </div>
 
-                    <div class="table-wrapper">
+                    <!-- SKELETON TABLE SAAT LOADING -->
+                    <div v-if="isLoading && showSkeleton" class="table-wrapper">
+                        <SkeletonTable :rows="8" :headers="TABLE_HEADERS" table-class="wide-table" />
+                    </div>
+
+                    <!-- TABEL ASLI KETIKA TIDAK LOADING -->
+                    <div v-else-if="!isLoading" class="table-wrapper">
                         <table class="data-table wide-table">
                             <thead>
                                 <tr>
@@ -695,6 +728,7 @@ onMounted(() => { fetchBukuIndukData() })
                     </div>
                 </div>
             </div>
+            </div>
         </main>
     </div>
 </template>
@@ -702,9 +736,8 @@ onMounted(() => { fetchBukuIndukData() })
 <style scoped>
 .app-layout { display: flex; min-height: 100vh; background-color: #f8fafc; }
 .dashboard-container { flex: 1; padding: 30px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: calc(100% - 250px); overflow-x: hidden; }
-.header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.header-container .page-title { font-size: 26px; font-weight: 800; color: #0f172a; margin: 0; }
-.loading-state { color: #64748b; font-size: 14px; padding: 20px 0; text-align: center; }
+
+
 
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; backdrop-filter: blur(4px); }
 .modal-content { background: #ffffff; width: 100%; max-width: 900px; border-radius: 12px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: modalIn 0.3s ease-out; border-top: 4px solid #3b82f6; }
@@ -730,68 +763,112 @@ onMounted(() => { fetchBukuIndukData() })
 .btn-submit:hover:not(:disabled) { background-color: #2563eb; }
 .btn-submit:disabled { background-color: #94a3b8; cursor: not-allowed; }
 
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
-.stat-card { background-color: #ffffff; border-radius: 12px; padding: 18px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-left: 5px solid #cbd5e1; cursor: pointer; transition: all 0.2s ease; }
-.stat-card:hover { transform: translateY(-2px); }
-.stat-card.active { box-shadow: 0 0 0 2px #3b82f6, 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-.stat-card.blue { border-left-color: #3b82f6; }
-.stat-card.teal { border-left-color: #14b8a6; }
-.stat-card.purple { border-left-color: #8b5cf6; }
-.stat-card.green { border-left-color: #10b981; }
-.stat-card.orange { border-left-color: #f59e0b; }
-.stat-card.cyan { border-left-color: #06b6d4; }
-.card-title { font-size: 10px; font-weight: 700; color: #64748b; }
-.card-value { font-size: 24px; font-weight: 700; color: #0f172a; margin-top: 8px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.stat-card {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 16px;
+    padding: 16px 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.stat-card:hover { transform: translateY(-4px); background: rgba(255, 255, 255, 0.25); box-shadow: 0 14px 40px rgba(0, 0, 0, 0.32); }
+.stat-card.active { box-shadow: 0 0 0 2px #22c08a, 0 8px 32px rgba(0, 0, 0, 0.25); border-color: rgba(34, 192, 138, 0.5); }
+.stat-card.blue { border-left: 4px solid #3b82f6; }
+.stat-card.teal { border-left: 4px solid #14b8a6; }
+.stat-card.purple { border-left: 4px solid #8b5cf6; }
+.stat-card.green { border-left: 4px solid #10b981; }
+.stat-card.orange { border-left: 4px solid #f59e0b; }
+.stat-card.cyan { border-left: 4px solid #06b6d4; }
+.card-title { font-size: 12px; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+.card-value { font-size: 28px; font-weight: 800; color: #ffffff; margin-top: 6px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); }
 
-.table-section { background-color: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-.table-controls { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
+.table-section {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+.table-controls { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.25); }
 .table-info { display: flex; justify-content: space-between; align-items: center; }
-.table-info h3 { font-size: 16px; font-weight: 600; color: #1e293b; margin: 0; }
+.table-info h3 { font-size: 18px; font-weight: 700; color: #ffffff; margin: 0; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
 .filter-group { display: flex; align-items: center; gap: 10px; }
-.filter-group label { font-size: 13px; font-weight: 600; color: #475569; }
-.select-box { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background-color: #fff; color: #334155; font-size: 13px; outline: none; cursor: pointer; }
-.badge-count { font-size: 12px; background-color: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+.filter-group label { font-size: 13.5px; font-weight: 700; color: #ffffff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+.select-box {
+    height: 40px;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 100px;
+    background-color: rgba(255, 255, 255, 0.88);
+    color: #0f172a;
+    font-size: 13.5px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: all 200ms ease;
+}
+.select-box:focus { background-color: #ffffff; border-color: #22c08a; box-shadow: 0 0 0 3px rgba(34, 192, 138, 0.35); }
+.badge-count { font-size: 12px; background: rgba(255, 255, 255, 0.22); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.35); padding: 4px 12px; border-radius: 100px; font-weight: 700; }
 
-.table-wrapper { overflow-x: auto; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; }
-.data-table { width: max-content; min-width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
-.data-table th, .data-table td { padding: 12px 14px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; white-space: nowrap; }
-.data-table th { background-color: #f8fafc; color: #475569; font-weight: 700; position: sticky; top: 0; z-index: 10; }
-.data-table td { color: #334155; vertical-align: middle; }
-.data-table tr:hover { background-color: #f1f5f9; }
+.table-wrapper {
+    overflow-x: auto;
+    max-width: 100%;
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 14px;
+}
+.table-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
+.table-wrapper::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.5); border-radius: 10px; }
 
-.sticky-col { position: sticky; left: 0; background-color: #fff; z-index: 5; box-shadow: 2px 0 5px rgba(0,0,0,0.05); font-weight: 600; }
-.data-table th.sticky-col { background-color: #f8fafc; z-index: 15; }
+.data-table { width: max-content; min-width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; color: #0f172a; }
+.data-table th, .data-table td { padding: 12px 14px; border-bottom: 1px solid rgba(226, 232, 240, 0.7); border-right: 1px solid rgba(226, 232, 240, 0.5); white-space: nowrap; }
+.data-table th { background-color: rgba(241, 245, 249, 0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: #0f172a; font-weight: 700; font-size: 12.5px; position: sticky; top: 0; z-index: 10; }
+.data-table td { color: #0f172a; vertical-align: middle; }
+.data-table tr:hover td { background-color: rgba(224, 242, 254, 0.70); }
 
-.text-center { text-align: center; color: #94a3b8; padding: 24px !important; }
+.sticky-col { position: sticky; left: 0; background-color: rgba(248, 250, 252, 0.98); z-index: 5; box-shadow: 2px 0 5px rgba(0,0,0,0.05); font-weight: 600; }
+.data-table th.sticky-col { background-color: rgba(241, 245, 249, 0.98); z-index: 15; }
+
+.text-center { text-align: center; color: #475569; padding: 24px !important; }
 .text-capitalize { text-transform: capitalize; }
 
-.status-badge { background-color: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.status-badge.aktif { background-color: #dcfce7; color: #166534; }
-.status-badge.dimutasi { background-color: #f3e8ff; color: #6b21a8; }
-.status-badge.dihibahkan { background-color: #dbeafe; color: #1e40af; }
-.status-badge.lelangmusnahkan { background-color: #fee2e2; color: #991b1b; }
-.status-badge.terupgrade { background-color: #e0f2fe; color: #0369a1; }
+.status-badge { display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: 12px; font-weight: 700; line-height: 1.3; letter-spacing: 0.3px; border: 1px solid transparent; }
+.status-badge.aktif { background-color: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.status-badge.dimutasi { background-color: #fef3c7; color: #854d0e; border-color: #fde68a; }
+.status-badge.dihibahkan { background-color: #ede9fe; color: #5b21b6; border-color: #ddd6fe; }
+.status-badge.lelangmusnahkan { background-color: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.status-badge.terupgrade { background-color: #e0f2fe; color: #075985; border-color: #bae6fd; }
 
 .pagination-container { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; }
-.btn-page { background-color: #ffffff; border: 1px solid #cbd5e1; color: #334155; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.btn-page:hover:not(:disabled) { background-color: #f8fafc; border-color: #94a3b8; }
-.btn-page:disabled { background-color: #f8fafc; color: #94a3b8; cursor: not-allowed; border-color: #e2e8f0; }
-.page-info { font-size: 13px; color: #475569; }
+.btn-page { background: rgba(255, 255, 255, 0.20); border: 1px solid rgba(255, 255, 255, 0.35); color: #ffffff; padding: 8px 18px; border-radius: 100px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-page:hover:not(:disabled) { background: rgba(255, 255, 255, 0.32); transform: translateY(-1px); }
+.btn-page:disabled { opacity: 0.45; cursor: not-allowed; background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); }
+.btn-page.active { background: linear-gradient(135deg, #1f7a8c, #22c08a) !important; color: #ffffff !important; border-color: rgba(255, 255, 255, 0.45) !important; box-shadow: 0 4px 14px rgba(34, 192, 138, 0.45); }
+.page-info { font-size: 13.5px; color: #ffffff; font-weight: 600; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
 
 /* INLINE EDIT STYLES */
-.edit-input { width: 100%; min-width: 100px; padding: 6px 8px; border: 1px solid #3b82f6; border-radius: 4px; font-size: 12px; outline: none; background-color: #eff6ff; }
-.edit-input:focus { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+.edit-input { width: 100%; min-width: 100px; padding: 6px 10px; border: 1px solid #22c08a; border-radius: 8px; font-size: 12px; font-weight: 600; outline: none; background-color: #ffffff; color: #0f172a; }
+.edit-input:focus { box-shadow: 0 0 0 2px rgba(34, 192, 138, 0.3); }
 .small-input { min-width: 50px; }
-.readonly-text { color: #94a3b8 !important; background-color: #f8fafc !important; }
+.readonly-text { color: #64748b !important; background-color: #f1f5f9 !important; }
 
 .action-cell { display: flex; gap: 8px; justify-content: center; }
-.btn-icon { background: none; border: none; font-size: 14px; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
-.edit-btn { color: #3b82f6; background-color: #eff6ff; }
-.edit-btn:hover { background-color: #3b82f6; color: white; }
-.delete-btn { color: #ef4444; background-color: #fef2f2; }
+.btn-icon { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(226, 232, 240, 0.8); font-size: 14px; cursor: pointer; width: 32px; height: 32px; border-radius: 100px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); }
+.btn-icon:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); }
+.edit-btn { color: #2563eb; }
+.edit-btn:hover { background-color: #2563eb; color: white; }
+.delete-btn { color: #ef4444; }
 .delete-btn:hover { background-color: #ef4444; color: white; }
-.save-btn { color: #10b981; background-color: #ecfdf5; font-weight: bold; }
+.save-btn { color: #10b981; font-weight: bold; }
 .save-btn:hover { background-color: #10b981; color: white; }
-.cancel-btn { color: #64748b; background-color: #f1f5f9; font-weight: bold;}
+.cancel-btn { color: #64748b; font-weight: bold;}
 .cancel-btn:hover { background-color: #64748b; color: white; }
 </style>
