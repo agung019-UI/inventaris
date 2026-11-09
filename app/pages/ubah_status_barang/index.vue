@@ -2,12 +2,15 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { toast } from 'vue3-toastify'
 import Navbar from '~/components/Navbar.vue'
+import SkeletonBox from '~/components/SkeletonBox.vue'
+import { useSkeletonDelay } from '~/composables/useSkeletonDelay'
 
 // PASTIKAN URL INI SAMA DENGAN DEPLOY TERBARU ANDA
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzumAO9oya0sXGww-r73arn6t5-BqmKLmbda2Lpg_XSs2fqMQtiDh_ZOy5_ZfROO8H8/exec"
 
 const dataInventaris = ref<any[]>([])
 const isLoading = ref(true)
+const showSkeleton = useSkeletonDelay(isLoading, 150)
 const isSubmitting = ref(false)
 const selectedLembaga = ref('SMA') 
 
@@ -114,27 +117,52 @@ onMounted(() => {
         <Navbar />
 
         <main class="dashboard-container">
-            <div class="header-container">
-                <h1 class="page-title">Update Status Barang</h1>
-                <p class="subtitle">Pindahkan, hibahkan, atau musnahkan barang dari inventaris.</p>
-            </div>
+            <PageHeader
+                title="Update Status Barang"
+                subtitle="Pindahkan, hibahkan, atau musnahkan barang dari inventaris."
+            />
+
+            <!-- AREA ISI: satu-satunya bagian yang scroll -->
+            <div class="page-body">
 
             <div class="content-grid">
                 
                 <!-- KOLOM KIRI: FORM MUTASI -->
-                <div class="form-card">
+                <div class="form-card" :aria-busy="isLoading ? 'true' : 'false'">
+                    <span v-if="isLoading" class="sr-only">Memuat daftar barang yang tersedia...</span>
                     <div class="form-header">
                         <h3>Formulir Perubahan Status Barang</h3>
-                        <select v-model="selectedLembaga" class="select-lembaga">
+                        <select v-model="selectedLembaga" class="select-lembaga" :disabled="isLoading">
                             <option value="SMA">Data SMA</option>
                             <option value="SMK">Data SMK</option>
                             <option value="YAYASAN">Data YAYASAN</option>
                         </select>
                     </div>
 
-                    <div v-if="isLoading" class="loading-state">Memuat daftar barang yang tersedia...</div>
-                    
-                    <form v-else @submit.prevent="submitMutasi" class="mutasi-form">
+                    <!-- SKELETON FORM MUTASI -->
+                    <div v-if="isLoading && showSkeleton" class="mutasi-form" aria-hidden="true">
+                        <div class="form-group">
+                            <SkeletonBox width="180px" height="14px" radius="4px" />
+                            <SkeletonBox width="100%" height="44px" radius="8px" />
+                        </div>
+                        <div class="item-preview" style="background-color: #f8fafc; border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px;">
+                            <div v-for="i in 5" :key="i" class="preview-row" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <SkeletonBox width="100px" height="12px" radius="4px" />
+                                <SkeletonBox width="140px" height="14px" radius="4px" />
+                            </div>
+                        </div>
+                        <div class="form-group mt-4">
+                            <SkeletonBox width="140px" height="14px" radius="4px" />
+                            <SkeletonBox width="100%" height="44px" radius="8px" />
+                        </div>
+                        <div class="form-group">
+                            <SkeletonBox width="200px" height="14px" radius="4px" />
+                            <SkeletonBox width="100%" height="44px" radius="8px" />
+                        </div>
+                        <SkeletonBox width="100%" height="46px" radius="8px" style="margin-top: 10px;" />
+                    </div>
+
+                    <form v-else-if="!isLoading" @submit.prevent="submitMutasi" class="mutasi-form">
                         
                         <div class="form-group">
                             <label>Pilih Barang (Hanya yang Aktif)</label>
@@ -207,6 +235,7 @@ onMounted(() => {
                 </div>
 
             </div>
+            </div>
         </main>
     </div>
 </template>
@@ -214,9 +243,7 @@ onMounted(() => {
 <style scoped>
 .app-layout { display: flex; min-height: 100vh; background-color: #f8fafc; }
 .dashboard-container { flex: 1; padding: 30px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: calc(100% - 250px); }
-.header-container { margin-bottom: 30px; }
-.page-title { font-size: 26px; font-weight: 800; color: #0f172a; margin: 0 0 5px 0; }
-.subtitle { color: #64748b; margin: 0; font-size: 14px; }
+
 
 .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; align-items: start; }
 @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } }
@@ -226,7 +253,7 @@ onMounted(() => {
 .form-header h3 { margin: 0; font-size: 18px; color: #1e293b; }
 .select-lembaga { padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; color: #3b82f6; outline: none; cursor: pointer; }
 
-.loading-state { text-align: center; padding: 40px; color: #64748b; font-style: italic; }
+
 
 .mutasi-form { display: flex; flex-direction: column; gap: 18px; }
 .form-group { display: flex; flex-direction: column; gap: 8px; }

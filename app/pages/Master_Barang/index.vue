@@ -2,12 +2,16 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { toast } from 'vue3-toastify'
 import Navbar from '~/components/Navbar.vue'
+import SkeletonTable from '~/components/SkeletonTable.vue'
+import { useSkeletonDelay } from '~/composables/useSkeletonDelay'
 
 // --- SESUAIKAN URL API ANDA ---
 const GOOGLE_SCRIPT_URL = "http://127.0.0.1:8000/api/inventaris"
 
 const dataMasterKode = ref<any[]>([])
 const isLoading = ref(true)
+const showSkeleton = useSkeletonDelay(isLoading, 150)
+const TABLE_HEADERS = ['No', 'Kategori / Golongan', 'Gol', 'Kel', 'Sub', 'Kode Referensi', 'Nama Barang / Deskripsi', 'Aksi']
 const searchQuery = ref('')
 
 // Modal & Form State
@@ -264,24 +268,23 @@ onMounted(() => { fetchMasterKode() })
         <Navbar />
 
         <main class="dashboard-container">
-            <div class="header-container">
-                <div>
-                    <h1 class="page-title">Master Kode Barang Inventaris</h1>
-                    <p class="subtitle">Daftar referensi sandi golongan, kelompok, dan nama barang.</p>
+            <PageHeader
+                title="Master Kode Barang Inventaris"
+                subtitle="Daftar referensi sandi golongan, kelompok, dan nama barang."
+            >
+                <div class="search-container">
+                    <input 
+                        type="text" 
+                        v-model="searchQuery" 
+                        placeholder="🔍 Cari nama barang atau kode..." 
+                        class="input-box search-box"
+                    />
                 </div>
-                
-                <div class="header-actions">
-                    <div class="search-container">
-                        <input 
-                            type="text" 
-                            v-model="searchQuery" 
-                            placeholder="🔍 Cari nama barang atau kode..." 
-                            class="input-box search-box"
-                        />
-                    </div>
-                    <button @click="showModal = true" class="btn-submit">+ Tambah Master Barang</button>
-                </div>
-            </div>
+                <button @click="showModal = true" class="btn-submit" :disabled="isLoading">+ Tambah Master Barang</button>
+            </PageHeader>
+
+            <!-- AREA ISI: satu-satunya bagian yang scroll -->
+            <div class="page-body">
 
             <!-- MODAL TAMBAH DATA -->
             <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
@@ -341,7 +344,7 @@ onMounted(() => { fetchMasterKode() })
                         </div>
 
                         <div class="form-actions">
-                            <button type="submit" class="btn-submit w-full" :disabled="isSubmitting">
+                            <button type="submit" class="btn-submit w-full" :disabled="isSubmitting || isLoading">
                                 <span v-if="isSubmitting">Menyimpan ke Database...</span>
                                 <span v-else>Simpan Master Kode Baru</span>
                             </button>
@@ -351,18 +354,20 @@ onMounted(() => { fetchMasterKode() })
             </div>
 
             <!-- TABEL DATA MASTER -->
-            <div v-if="isLoading" class="loading-state">
-                <div class="spinner"></div>
-                <p>Memuat Master Kode Barang...</p>
-            </div>
-
-            <div v-else class="table-section">
+            <div class="table-section" :aria-busy="isLoading ? 'true' : 'false'">
+                <span v-if="isLoading" class="sr-only">Memuat Master Kode Barang...</span>
                 <div class="table-info">
                     <h3>Daftar Referensi Kode</h3>
-                    <span class="badge-count">Menampilkan {{ filteredMasterKode.length }} data referensi</span>
+                    <span class="badge-count">Menampilkan {{ isLoading ? '...' : filteredMasterKode.length }} data referensi</span>
                 </div>
 
-                <div class="table-wrapper mt-4">
+                <!-- SKELETON TABLE SAAT LOADING -->
+                <div v-if="isLoading && showSkeleton" class="table-wrapper mt-4">
+                    <SkeletonTable :rows="8" :headers="TABLE_HEADERS" table-class="wide-table" />
+                </div>
+
+                <!-- TABEL ASLI KETIKA TIDAK LOADING -->
+                <div v-else-if="!isLoading" class="table-wrapper mt-4">
                     <table class="data-table wide-table">
                         <thead>
                             <tr>
@@ -420,11 +425,12 @@ onMounted(() => { fetchMasterKode() })
                     </table>
                 </div>
 
-                <div class="pagination-container" v-if="totalPages > 0">
+                <div class="pagination-container" v-if="!isLoading && totalPages > 0">
                     <button class="btn-page" :disabled="currentPage === 1" @click="currentPage--">&laquo; Sebelumnya</button>
                     <span class="page-info">Halaman <strong style="color: #0f172a;">{{ currentPage }}</strong> dari {{ totalPages }}</span>
                     <button class="btn-page" :disabled="currentPage === totalPages" @click="currentPage++">Selanjutnya &raquo;</button>
                 </div>
+            </div>
             </div>
         </main>
     </div>
@@ -434,11 +440,7 @@ onMounted(() => { fetchMasterKode() })
 .app-layout { display: flex; min-height: 100vh; background-color: #f8fafc; }
 .dashboard-container { flex: 1; padding: 30px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: calc(100% - 250px); overflow-x: hidden; }
 
-.header-container { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 15px; }
-.header-container .page-title { font-size: 26px; font-weight: 800; color: #0f172a; margin: 0 0 5px 0; }
-.subtitle { color: #64748b; font-size: 14px; margin: 0; }
 
-.header-actions { display: flex; gap: 15px; align-items: center; flex-wrap: wrap;}
 .search-container { min-width: 250px; }
 .search-box { width: 100%; padding: 10px 16px; border-radius: 30px; border: 1px solid #cbd5e1; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s; }
 .search-box:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); outline: none; }
@@ -473,8 +475,8 @@ onMounted(() => { fetchMasterKode() })
 .btn-submit:hover:not(:disabled) { background-color: #2563eb; }
 .btn-submit:disabled { background-color: #94a3b8; cursor: not-allowed; }
 
-.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; font-size: 15px; padding: 60px 0; height: 50vh; }
-.spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+
+
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .table-section { background-color: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }

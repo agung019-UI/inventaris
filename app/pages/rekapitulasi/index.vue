@@ -2,14 +2,21 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { toast } from 'vue3-toastify'
 import Navbar from '~/components/Navbar.vue'
+import SkeletonCards from '~/components/SkeletonCards.vue'
+import SkeletonTable from '~/components/SkeletonTable.vue'
+import { useSkeletonDelay } from '~/composables/useSkeletonDelay'
 // Import library html2pdf
 import html2pdf from 'html2pdf.js'
+import { parsePrice } from '~/utils/price'
 
 // --- PASTIKAN URL INI SAMA DENGAN URL DEPLOY TERBARU ANDA ---
 const GOOGLE_SCRIPT_URL = "http://127.0.0.1:8000/api/inventaris"
 
 const dataInventaris = ref<any[]>([])
 const isLoading = ref(true)
+const showSkeleton = useSkeletonDelay(isLoading, 150)
+const HEADERS_AKTIF = ['No', 'Kategori / Golongan', 'Kelompok Barang', 'Total Kuantitas', 'Baik/Baru', 'Rusak', 'Estimasi Nilai Total (Gross)']
+const HEADERS_KELUAR = ['No', 'Kategori / Golongan', 'Kelompok Barang', 'Total Kuantitas', 'Baik/Baru', 'Rusak', 'Dimutasi', 'Dihibahkan', 'Lelang/Musnah', 'Estimasi Nilai Total (Gross)']
 const selectedLembaga = ref('SMA')
 
 // Referensi untuk area yang akan dicetak ke PDF (mencakup semua data)
@@ -19,12 +26,6 @@ const isGeneratingPDF = ref(false)
 // Fungsi format dan parsing
 const formatRupiah = (angka: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
-}
-
-const parsePrice = (priceStr: any) => {
-    if (!priceStr) return 0
-    const cleanStr = String(priceStr).replace(/[^0-9]/g, '')
-    return parseInt(cleanStr, 10) || 0
 }
 
 const fetchBukuIndukData = async () => {
@@ -197,45 +198,61 @@ const grandTotalKeluar = computed(() => calcGrandTotal(rekapDataKeluar.value))
         <Navbar />
 
         <main class="dashboard-container">
-            <div class="header-container">
-                <div>
-                    <h1 class="page-title">
-                        Laporan Rekapitulasi Inventaris
-                    </h1>
-                    <p class="subtitle">
-                        Ringkasan total kuantitas, kondisi, dan nilai aset tersedia serta aset keluar berdasarkan Golongan & Kelompok.
-                    </p>
-                </div>
-                
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <!-- TOMBOL GENERATE PDF -->
-                    <button 
-                        @click="generatePDF" 
-                        class="btn-export" 
-                        :disabled="isLoading || isGeneratingPDF || dataInventaris.length === 0">
-                        <svg v-if="!isGeneratingPDF" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        <span v-if="isGeneratingPDF">Memproses...</span>
-                        <span v-else>Cetak PDF (Landscape)</span>
-                    </button>
+            <PageHeader
+                title="Laporan Rekapitulasi Inventaris"
+                subtitle="Ringkasan total kuantitas, kondisi, dan nilai aset tersedia serta aset keluar berdasarkan Golongan & Kelompok."
+            >
+                <!-- TOMBOL GENERATE PDF -->
+                <button 
+                    @click="generatePDF" 
+                    class="btn-export" 
+                    :disabled="isLoading || isGeneratingPDF || dataInventaris.length === 0">
+                    <svg v-if="!isGeneratingPDF" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span v-if="isGeneratingPDF">Memproses...</span>
+                    <span v-else>Cetak PDF (Landscape)</span>
+                </button>
 
-                    <div class="filter-group-header">
-                        <label for="pilihLembaga">Lembaga:</label>
-                        <select id="pilihLembaga" v-model="selectedLembaga" class="select-box highlight-select">
-                            <option value="SMA">SMA Budhi Warman II</option>
-                            <option value="SMK">SMK Budhi Warman II</option>
-                            <option value="YAYASAN">Yayasan Budhi Warman II</option>
-                        </select>
+                <div class="filter-group-header">
+                    <label for="pilihLembaga">Lembaga:</label>
+                    <select id="pilihLembaga" v-model="selectedLembaga" class="select-box highlight-select" :disabled="isLoading">
+                        <option value="SMA">SMA Budhi Warman II</option>
+                        <option value="SMK">SMK Budhi Warman II</option>
+                        <option value="YAYASAN">Yayasan Budhi Warman II</option>
+                    </select>
+                </div>
+            </PageHeader>
+
+            <!-- AREA ISI: satu-satunya bagian yang scroll -->
+            <div class="page-body">
+
+            <div :aria-busy="isLoading ? 'true' : 'false'">
+                <span v-if="isLoading" class="sr-only">Menyusun Laporan Rekapitulasi {{ selectedLembaga }}...</span>
+
+                <!-- SKELETON REKAPITULASI -->
+                <div v-if="isLoading && showSkeleton" class="pdf-container" style="background-color: white; padding: 20px;" aria-hidden="true">
+                    <div class="section-title-badge text-green" style="margin-bottom: 12px; font-weight: 700; font-size: 15px;">
+                        A. LAPORAN ASET TERSEDIA (AKTIF)
+                    </div>
+                    <SkeletonCards :count="3" grid-class="stats-grid" :card-height="84" />
+                    <div class="table-section">
+                        <div class="table-wrapper">
+                            <SkeletonTable :rows="6" :headers="HEADERS_AKTIF" />
+                        </div>
+                    </div>
+
+                    <div class="section-title-badge text-red" style="margin-top: 35px; margin-bottom: 12px; font-weight: 700; font-size: 15px;">
+                        B. LAPORAN ASET KELUAR
+                    </div>
+                    <SkeletonCards :count="4" grid-class="stats-grid" :card-height="84" />
+                    <div class="table-section">
+                        <div class="table-wrapper">
+                            <SkeletonTable :rows="6" :headers="HEADERS_KELUAR" />
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div v-if="isLoading" class="loading-state">
-                <div class="spinner"></div>
-                <h2>Menyusun Laporan Rekapitulasi {{ selectedLembaga }}...</h2>
-            </div>
-
-            <!-- CONTAINER UTAMA YANG AKAN DI-RENDER MENJADI PDF -->
-            <div v-else ref="reportRef" class="pdf-container" style="background-color: white; padding: 20px;">
+                <!-- CONTAINER UTAMA YANG AKAN DI-RENDER MENJADI PDF -->
+                <div v-else-if="!isLoading" ref="reportRef" class="pdf-container" style="background-color: white; padding: 20px;">
                 
                 <!-- HEADER LAPORAN PDF -->
                 <div class="pdf-header" style="text-align: center; margin-bottom: 25px;">
@@ -412,69 +429,213 @@ const grandTotalKeluar = computed(() => calcGrandTotal(rekapDataKeluar.value))
                 </div>
 
             </div>
+            </div>
+            </div>
         </main>
     </div>
 </template>
 
 <style scoped>
-.app-layout { display: flex; min-height: 100vh; background-color: #f8fafc; }
+.app-layout { display: flex; min-height: 100vh; background: transparent; }
 .dashboard-container { flex: 1; padding: 30px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: calc(100% - 250px); overflow-x: hidden; }
 
-.header-container { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; }
-.page-title { font-size: 26px; font-weight: 800; color: #0f172a; margin: 0 0 5px 0; }
-.subtitle { font-size: 14px; color: #64748b; margin: 0; }
-
-.filter-group-header { display: flex; align-items: center; gap: 10px; background: white; padding: 10px 18px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-.filter-group-header label { font-size: 13px; font-weight: 700; color: #475569; }
-.highlight-select { font-weight: 700; color: #3b82f6; border: none; background: transparent; padding: 0; outline: none; font-size: 15px; cursor: pointer; }
+/* KOTAK LEMBAGA DI PAGE HEADER */
+.filter-group-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.20);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    border-radius: 14px;
+    padding: 6px 14px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+.filter-group-header label {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    white-space: nowrap;
+    margin: 0;
+}
+.highlight-select {
+    font-weight: 700;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.40);
+    background: rgba(255, 255, 255, 0.25);
+    padding: 5px 12px;
+    border-radius: 10px;
+    outline: none;
+    font-size: 13.5px;
+    cursor: pointer;
+}
+.highlight-select option {
+    background: #1e293b;
+    color: #ffffff;
+}
 
 /* STYLE BUTTON EXPORT */
-.btn-export { display: flex; align-items: center; background-color: #0f172a; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.btn-export:hover:not(:disabled) { background-color: #1e293b; transform: translateY(-1px); }
-.btn-export:disabled { background-color: #94a3b8; cursor: not-allowed; }
+.btn-export {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    padding: 0 20px;
+    height: 40px;
+    border-radius: 100px;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+.btn-export:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #ff7b7b 0%, #ff3b3b 100%);
+    background: linear-gradient(135deg, #ff7b7b 0%, #ff3b3b 100%) !important;
+    box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+.btn-export:focus,
+.btn-export:focus-visible,
+.btn-export:active {
+    box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    outline: none;
+}
+.btn-export:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
 
-.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 40vh; color: #64748b; font-weight: 600; }
-.spinner { border: 4px solid #e2e8f0; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.section-title-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.20);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
 
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 15px; }
-.stat-card { background-color: #ffffff; border-radius: 12px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-left: 5px solid #cbd5e1; display: flex; align-items: center; gap: 10px; }
-.stat-card.teal { border-left-color: #14b8a6; }
-.stat-card.cyan { border-left-color: #06b6d4; }
-.stat-card.orange { border-left-color: #f59e0b; }
-.stat-card.purple { border-left-color: #8b5cf6; }
-.stat-card.green { border-left-color: #22c55e; }
-.stat-card.red { border-left-color: #ef4444; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.stat-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    padding: 16px 20px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 250ms ease, box-shadow 250ms ease;
+}
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+.stat-card.teal { border-left: 4px solid #14b8a6 !important; }
+.stat-card.cyan { border-left: 4px solid #06b6d4 !important; }
+.stat-card.orange { border-left: 4px solid #f59e0b !important; }
+.stat-card.purple { border-left: 4px solid #8b5cf6 !important; }
+.stat-card.green { border-left: 4px solid #22c55e !important; }
+.stat-card.red { border-left: 4px solid #ef4444 !important; }
+
 .card-info { flex: 1; }
-.card-title { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-.card-value { font-size: 22px; font-weight: 800; margin: 4px 0 2px 0; color: #0f172a; }
-.unit { font-size: 12px; font-weight: 600; color: #94a3b8; }
+.stat-card .card-title,
+.card-info .card-title {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    text-shadow: none !important;
+}
+.stat-card .card-value,
+.card-info .card-value {
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    margin: 4px 0 2px 0 !important;
+    color: #0f172a !important;
+    text-shadow: none !important;
+}
+.stat-card .unit,
+.card-info .unit {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    text-shadow: none !important;
+}
 
-.table-section { background-color: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-.table-wrapper { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+.table-section {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    margin-bottom: 24px;
+}
+.table-wrapper {
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 14px;
+    overflow-x: auto;
+}
+.table-wrapper::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+}
 
 /* Menghindari potongan row tabel saat export pdf */
-.data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; page-break-inside: auto; }
+.data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12.5px; page-break-inside: auto; color: #0f172a; text-shadow: none !important; }
 .data-table tr { page-break-inside: avoid; page-break-after: auto; }
-.data-table th, .data-table td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;}
-.data-table th { background-color: #f8fafc; color: #475569; font-weight: 700; vertical-align: middle; }
-.data-table td { color: #334155; vertical-align: middle; }
-.data-table tr:hover { background-color: #f1f5f9; }
+.data-table th, .data-table td { padding: 10px 14px; border-bottom: 1px solid rgba(226, 232, 240, 0.7); border-right: 1px solid rgba(226, 232, 240, 0.6); text-shadow: none !important; }
+.data-table th { background-color: rgba(241, 245, 249, 0.95); color: #0f172a; font-weight: 700; vertical-align: middle; position: sticky; top: 0; z-index: 10; text-shadow: none !important; }
+.data-table td { color: #0f172a; vertical-align: middle; text-shadow: none !important; }
+.data-table *,
+.table-wrapper * { text-shadow: none !important; }
+.data-table tr:hover td { background-color: rgba(224, 242, 254, 0.70); }
 
 .border-group { border-bottom: 1px solid #cbd5e1 !important; }
-.th-sub { font-size: 10px !important; background-color: #f1f5f9 !important; color: #64748b !important; }
-.highlight-col { background-color: #f8fafc; border-left: 2px solid #e2e8f0 !important; border-right: 2px solid #e2e8f0 !important; }
+.th-sub { font-size: 11px !important; background-color: rgba(241, 245, 249, 0.98) !important; color: #334155 !important; font-weight: 700 !important; }
+.highlight-col { background-color: rgba(241, 245, 249, 0.5); border-left: 2px solid rgba(203, 213, 225, 0.8) !important; border-right: 2px solid rgba(203, 213, 225, 0.8) !important; }
 
-.footer-row { background-color: #1e293b; color: white !important; page-break-inside: avoid; }
-.footer-row td { color: white !important; border-color: #334155; font-size: 13px; padding: 12px 14px; }
-.footer-row .highlight-col { background-color: #0f172a; border-color: #334155 !important; }
+.footer-row { background-color: #0f172a !important; color: #ffffff !important; page-break-inside: avoid; }
+.footer-row td { color: #ffffff !important; border-color: rgba(255, 255, 255, 0.2); font-size: 13.5px; font-weight: 700; padding: 12px 14px; }
+.footer-row .highlight-col { background-color: #020617 !important; border-color: rgba(255, 255, 255, 0.2) !important; }
 
 .text-right { text-align: right; }
 .text-center { text-align: center; }
-.text-green { color: #16a34a; font-weight: 600; }
-.text-red { color: #dc2626; font-weight: 600; }
-.text-purple { color: #7c3aed; font-weight: 600; }
-.text-cyan { color: #0891b2; font-weight: 600; }
+.text-green { color: #15803d !important; font-weight: 700; }
+.text-red { color: #b91c1c !important; font-weight: 700; }
+.text-purple { color: #6d28d9 !important; font-weight: 700; }
+.text-cyan { color: #0369a1 !important; font-weight: 700; }
 
 .text-green-light { color: #4ade80 !important; }
 .text-red-light { color: #f87171 !important; }
